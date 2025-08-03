@@ -16,19 +16,23 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for professional styling
+# Custom CSS for professional styling with dark/light mode support
 st.markdown("""
 <style>
     .main > div {
         padding-top: 2rem;
     }
+    
+    /* Metrics styling - adapts to theme */
     .stMetric {
-        background-color: #f8f9fa;
-        border: 1px solid #e9ecef;
+        background-color: var(--background-color);
+        border: 1px solid var(--border-color);
         padding: 1rem;
         border-radius: 0.5rem;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+    
+    /* Status indicators with good contrast for both themes */
     .status-good {
         background-color: #d4edda;
         color: #155724;
@@ -53,8 +57,119 @@ st.markdown("""
         text-align: center;
         font-weight: bold;
     }
-    .sidebar .sidebar-content {
-        background-color: #f8f9fa;
+    
+    /* Dark mode specific styles */
+    [data-theme="dark"] .status-good {
+        background-color: #0f3e1a;
+        color: #4caf50;
+    }
+    [data-theme="dark"] .status-warning {
+        background-color: #3d2c00;
+        color: #ff9800;
+    }
+    [data-theme="dark"] .status-critical {
+        background-color: #4a1e1e;
+        color: #f44336;
+    }
+    
+    /* Navigation radio buttons with theme-aware styling */
+    .stRadio > div {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    /* Light mode radio button styling */
+    .stRadio > div > label {
+        background-color: rgba(248, 249, 250, 0.8) !important;
+        border: 1px solid rgba(222, 226, 230, 0.8) !important;
+        border-radius: 0.375rem !important;
+        padding: 0.75rem 1rem !important;
+        margin: 0.25rem 0 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        font-weight: 500 !important;
+        color: #212529 !important;
+        font-size: 14px !important;
+    }
+    
+    .stRadio > div > label:hover {
+        background-color: rgba(233, 236, 239, 0.9) !important;
+        border-color: #0d6efd !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    }
+    
+    .stRadio > div > label[data-checked="true"] {
+        background-color: #0d6efd !important;
+        color: white !important;
+        border-color: #0d6efd !important;
+        font-weight: 600 !important;
+        box-shadow: 0 3px 6px rgba(13, 110, 253, 0.3) !important;
+    }
+    
+    /* Dark mode radio button styling */
+    [data-theme="dark"] .stRadio > div > label {
+        background-color: rgba(64, 70, 82, 0.8) !important;
+        border: 1px solid rgba(128, 134, 139, 0.3) !important;
+        color: #e8eaed !important;
+    }
+    
+    [data-theme="dark"] .stRadio > div > label:hover {
+        background-color: rgba(90, 98, 110, 0.9) !important;
+        border-color: #4285f4 !important;
+        color: #ffffff !important;
+    }
+    
+    [data-theme="dark"] .stRadio > div > label[data-checked="true"] {
+        background-color: #4285f4 !important;
+        color: white !important;
+        border-color: #4285f4 !important;
+        box-shadow: 0 3px 6px rgba(66, 133, 244, 0.3) !important;
+    }
+    
+    /* Additional dark mode support for better visibility */
+    @media (prefers-color-scheme: dark) {
+        .stRadio > div > label {
+            background-color: rgba(64, 70, 82, 0.8) !important;
+            border: 1px solid rgba(128, 134, 139, 0.3) !important;
+            color: #e8eaed !important;
+        }
+        
+        .stRadio > div > label:hover {
+            background-color: rgba(90, 98, 110, 0.9) !important;
+            border-color: #4285f4 !important;
+            color: #ffffff !important;
+        }
+        
+        .stRadio > div > label[data-checked="true"] {
+            background-color: #4285f4 !important;
+            color: white !important;
+            border-color: #4285f4 !important;
+        }
+        
+        .status-good {
+            background-color: #0f3e1a !important;
+            color: #4caf50 !important;
+        }
+        .status-warning {
+            background-color: #3d2c00 !important;
+            color: #ff9800 !important;
+        }
+        .status-critical {
+            background-color: #4a1e1e !important;
+            color: #f44336 !important;
+        }
+    }
+    
+    /* Force text visibility in all scenarios */
+    .stRadio label span {
+        color: inherit !important;
+        font-weight: inherit !important;
+    }
+    
+    /* Sidebar content styling */
+    .css-1d391kg, .css-1y0tads {
+        background-color: transparent;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -119,15 +234,39 @@ def log_event(event_type, message):
         "message": message
     })
 
-# Sidebar navigation
+# Sidebar navigation with visible options
 st.sidebar.title("🔋 Cell Management System")
-page = st.sidebar.selectbox(
-    "Navigation",
-    ["Dashboard", "Setup", "Control Panel", "Task Manager", "Analytics"]
+st.sidebar.markdown("---")
+
+# Navigation options using radio buttons for better visibility
+page = st.sidebar.radio(
+    "**Navigation Menu**",
+    options=[
+        "📊 Dashboard", 
+        "⚙️ Setup", 
+        "🎛️ Control Panel", 
+        "📋 Task Manager", 
+        "📈 Analytics"
+    ],
+    index=0,  # Default to Dashboard
+    key="navigation"
 )
 
+# Add some spacing and system info in sidebar
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 📱 System Info")
+if st.session_state.cells_data:
+    st.sidebar.info(f"**Active Cells:** {len(st.session_state.cells_data)}")
+    st.sidebar.info(f"**Queued Tasks:** {len(st.session_state.task_queue)}")
+    st.sidebar.info(f"**System Logs:** {len(st.session_state.system_logs)}")
+else:
+    st.sidebar.warning("No cells configured")
+
+# Extract the page name without emoji for logic
+page_name = page.split(" ", 1)[1] if " " in page else page
+
 # Dashboard Page
-if page == "Dashboard":
+if "Dashboard" in page:
     st.title("📊 System Dashboard")
     
     if not st.session_state.cells_data:
@@ -211,7 +350,7 @@ if page == "Dashboard":
             st.info("No system logs available.")
 
 # Setup Page
-elif page == "Setup":
+elif "Setup" in page:
     st.title("⚙️ System Setup")
     
     tab1, tab2, tab3 = st.tabs(["Cell Configuration", "System Settings", "Import/Export"])
@@ -328,7 +467,7 @@ elif page == "Setup":
             )
 
 # Control Panel Page
-elif page == "Control Panel":
+elif "Control Panel" in page:
     st.title("🎛️ Control Panel")
     
     if not st.session_state.cells_data:
@@ -451,7 +590,7 @@ elif page == "Control Panel":
                     st.success("System restarted successfully!")
 
 # Task Manager Page
-elif page == "Task Manager":
+elif "Task Manager" in page:
     st.title("📋 Task Manager")
     
     if not st.session_state.cells_data:
@@ -614,8 +753,8 @@ elif page == "Task Manager":
             st.info("Task history feature will show completed and cancelled tasks.")
 
 # Analytics Page
-elif page == "Analytics":
-    st.title("📊 Analytics & Reports")
+elif "Analytics" in page:
+    st.title("📈 Analytics & Reports")
     
     if not st.session_state.cells_data:
         st.warning("No cells configured. Please go to Setup to add cells.")
